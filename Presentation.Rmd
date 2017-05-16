@@ -1,0 +1,112 @@
+---
+title: "Milestone Report"
+author: "Rodrigo Franco Fuentes"
+date: "13 de mayo de 2017"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE, cache = TRUE}
+knitr::opts_chunk$set(echo = FALSE)
+#Packages
+#library(dplyr)
+#library(tidyr)
+#library(tidytext)
+#library(tidyverse)
+#library(ggplot2)
+#library(igraph)
+#library(ggraph)
+#library(tidytext)
+
+
+##Reading files
+#Blog_Eng<-tbl_df(read_lines(file = "./final/en_US/en_US.blogs.txt"))
+#News_Eng<-tbl_df(read_lines(file = "./final/en_US/en_US.news.txt"))
+#Tweet_Eng<-tbl_df(read_lines(file = "./final/en_US/en_US.twitter.txt"))
+
+###Tokenizing into sentences and words
+#Temporally Subsetting to reduce time
+#Transforming from character to data frame 
+
+#Tokenizing
+#Token_Blog <- Blog_Eng %>%
+#      mutate(Line = row_number()) %>%
+#      unnest_tokens(output = word, input = value)
+
+#Token_News <- News_Eng %>%
+#      mutate(Line = row_number()) %>%
+#      unnest_tokens(output = word, input = value)
+
+#Token_Tweet <- Tweet_Eng %>%
+#      mutate(Line = row_number()) %>%
+#      unnest_tokens(output = word, input = value)
+
+#removing stop words
+#data(stop_words)
+#tidy_Blog <- Token_Blog %>%
+#      mutate(source = "English Blog") %>%
+#      anti_join(stop_words)
+
+#tidy_News <- Token_News %>%
+#      mutate(source = "English News") %>%
+#      anti_join(stop_words)
+
+#tidy_Tweet <- Token_Tweet %>%
+#      mutate(source = "English News") %>%
+#      anti_join(stop_words)
+
+#joining data sets
+#Tidy_All<- bind_rows(tidy_Blog, tidy_News)
+#Tidy_All <- bind_rows(Tidy_All,tidy_Tweet)
+#write.table(Tidy_All, "./Tidy_All_English.txt", sep = "\t")
+#gc()
+Tidy_all<-read.table("Tidy_All_English.txt")
+
+data(stop_words)
+stop_words
+
+#Word distribution
+
+
+####Most common non stop-words all DataSets
+Tidy_all %>%
+      count(word, sort = TRUE) %>%
+      filter(n >40000) %>%
+      mutate(word = reorder(word, n )) %>%
+      ggplot(aes(word,n)) +
+      geom_col() + 
+      coord_flip()
+
+Tidy_all %>%
+      group_by(source) %>%
+      count( word, sort = TRUE)
+
+gc()
+#characteristic words for the texts inverse word frequency
+      
+```
+
+## In this presentation I aim to show
+
+- Demonstrate that I have downloaded the data 
+- Basic report of summary statistics using the data sets
+- Report findings
+- Get feedback on my plans for creating a prediction algorithm and Shiny app. 
+
+## 
+
+- Demonstrate that I have downloaded the data and have succesfully downloaded it
+- Basic report of summary statistics using the data sets
+- Report findings
+- Get feedback on my plans for creating a prediction algorithm and Shiny app. 
+
+
+```{r cars, echo = TRUE}
+
+```
+
+## Word and document frequency
+
+```{r pressure}
+plot(pressure)
+```
+
