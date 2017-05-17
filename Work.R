@@ -1,13 +1,4 @@
----
-title: "Milestone Report"
-author: "Rodrigo Franco Fuentes"
-date: "13 de mayo de 2017"
-output: slidy_presentation
----
-
-```{r setup, include=FALSE, cache = TRUE}
-knitr::opts_chunk$set(echo = FALSE)
-#Packages
+ #Packages
 #library(dplyr)
 #library(tidyr)
 #library(tidytext)
@@ -47,13 +38,11 @@ rm(Blog_Eng)
 rm(News_Eng)
 rm(Tweet_Eng)
 gc()
-#one big data set
+
 
 All <- rbind(Token_Blog, Token_News)
-All <- rbind(All, Token_Tweet)
+All <- rbind(All, Token_Tweet) #posiblemente demasiado grande para r
 
-rm(Token_Blog)
-rm(Token_News)
 rm(Token_Tweet)
 gc()
 
@@ -91,27 +80,9 @@ write.table(Tidy_All, "./Tidy_All_English2.txt", sep = "\t")
 ####Most common non stop-words all DataSets
 
 
-      
+
 #characteristic words for the texts inverse word frequency
-      
-```
 
-## In this presentation I aim to show
-
-- Demonstrate that I have downloaded the data 
-- Basic report of summary statistics using the data sets
-- Report findings
-- Get feedback on my plans for creating a prediction algorithm and Shiny app. 
-
-## 
-
-- Demonstrate that I have downloaded the data and have succesfully downloaded it
-- Basic report of summary statistics using the data sets
-- Report findings
-- Get feedback on my plans for creating a prediction algorithm and Shiny app. 
-
-
-```{r cars, echo = TRUE, cache = TRUE}
 Tidy_All %>%
       count(word, sort = TRUE) %>%
       filter(n >40000) %>%
@@ -119,13 +90,8 @@ Tidy_All %>%
       ggplot(aes(word,n)) +
       geom_col() + 
       coord_flip() 
-```
-
-## Word and document frequency by text
 
 
-Inverse document frequency
-```{r pressure}
 Source_Words <- Tidy_All %>%
       count(source, word, sort = TRUE) %>%
       ungroup()
@@ -135,5 +101,5 @@ Total_Words <- Source_Words %>%
       summarize(total = sum(n))
 
 
-```
+
 
