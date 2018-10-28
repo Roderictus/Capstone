@@ -50,13 +50,17 @@ B <- c("N_Entries", nrow(Blog_Eng), nrow(News_Eng), nrow(Tweet_Eng))
 C <- c("N_Words", nrow(Token_Blog), nrow(Token_News), nrow(Token_Tweet))
 D <- c("Tidy_Words", nrow(tidy_Blog), nrow(tidy_News), nrow(tidy_Tweet))
 
+T1<-cbind(cbind(cbind(A, B),C),D)
+T1 <- T1[-1,]
+colnames(T1) <- c("Source", "N_Entries", "N_Words", "Tidy_Words")
+write.table(x = T1, file = "Table1.csv")
+T1 <- read.table(file = "Table1.csv")
 #rm(Blog_Eng)
 #rm(News_Eng)
 #rm(Tweet_Eng)
 #gc()
 
-temp <-cbind(A, B,C,D)
-colnames(temp) <- c("", "N_Entries", "N_Words", "Tidy_Words")
+################################################################################
 
 frequency <- bind_rows(mutate(tidy_Blog, Source = "Blog"),
                        mutate(tidy_News, Source = "News"),
@@ -68,26 +72,24 @@ frequency <- bind_rows(mutate(tidy_Blog, Source = "Blog"),
   select(-n) %>%
   spread(Source, proportion) %>%
   gather(Source, proportion, "Blog":"Tweet" )
-
 frequency %>%
   arrange(-proportion)
 
-
-
+#################################################################################
 
 Blog_count <- tidy_Blog %>% 
   count(word, sort = TRUE) %>%
   top_n(10,n) 
 Blog_count$total <- nrow(tidy_Blog)
 Blog_count$freq <- (Blog_count$n/Blog_count$total)*10000 #ocurrences for every 10,000 words
-Blog_count[,-3] 
+Blog_count <- Blog_count[,-3] 
 
 News_count <- tidy_News %>% 
   count(word, sort = TRUE) %>%
   top_n(10,n)
 News_count$total <- nrow(tidy_News)
 News_count$freq <- (News_count$n/News_count$total)*10000 #ocurrences for every 10,000 words
-News_count[,-3]  
+News_count<-News_count[,-3]  
 
 
 Tweet_count <- tidy_Tweet %>% 
@@ -95,12 +97,29 @@ Tweet_count <- tidy_Tweet %>%
   top_n(10,n) 
 Tweet_count$total <- nrow(tidy_Tweet)
 Tweet_count$freq <- (Tweet_count$n/Tweet_count$total)*10000 #ocurrences for every 10,000 words
-Tweet_count[,-3]  
+Tweet_count <- Tweet_count[,-3]  
 
-colnames(Blog_count) <- c("Top Blog Words", "N")
-colnames(News_count) <- c("Top News Words", "N")
-colnames(Tweet_count) <- c("Top Tweet Words", "N")
+colnames(Blog_count) <- c("Top_Blog", "N_Blog", "Freq_Blog")
+colnames(News_count) <- c("Top_News", "N_News", "Freq_News")
+colnames(Tweet_count) <- c("Top_Tweet", "N_Tweet", "Freq_Tweet")
 
+T2 <- cbind(cbind(Blog_count, News_count), Tweet_count)
+write.csv(x = T2, file = "Table2.csv")
+T2<-read.csv(file = "Table2.csv")
+T2
+
+###########################Bigrams###########################################
+
+Blog_Bigram <- Blog_Eng %>% unnest_tokens(bigram, value, token = "ngrams", n = 2)
+
+
+CB <- Blog_Bigram %>%
+  count(bigram, sort = TRUE)
+
+qplot(CB)
+
+
+hist()
 
 
 Tidy_All %>%
@@ -111,13 +130,9 @@ Tidy_All %>%
   geom_col() + 
   coord_flip() 
   
-  
-                         
-                         
-
 
 #deleting and models subsetting
-
+#number of diferent words, numbr of diferent bigrams, trigrams, computational efficiency
 
 
 

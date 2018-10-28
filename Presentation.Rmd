@@ -1,12 +1,14 @@
 ---
 title: "Milestone Report"
 author: "Rodrigo Franco Fuentes"
-date: "13 de mayo de 2017"
-output: slidy_presentation
+date: "27/10/2018"
+output:
+  ioslides_presentation: default
+  slidy_presentation: default
 ---
 
 ```{r setup, include=FALSE, cache = TRUE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE)
 #Packages
 #library(dplyr)
 #library(tidyr)
@@ -14,126 +16,32 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 #library(ggplot2)
 library(igraph)
-library(ggraph)
 library(tidytext)
-
-#download.file("https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip", "Coursera_Swiftkey.zip")
-#list.files("./final/en_US")
-#unzip("Coursera_Swiftkey.zip")
-
-
-##Reading files
-Blog_Eng<-tbl_df(read_lines(file = "./final/en_US/en_US.blogs.txt"))
-News_Eng<-tbl_df(read_lines(file = "./final/en_US/en_US.news.txt"))
-Tweet_Eng<-readLines(con =  "./final/en_US/en_US.twitter.txt",encoding = "UTF16-LE", skipNul = TRUE)
-Tweet_Eng <- tbl_df(Tweet_Eng)
-###Tokenizing into sentences and words
-#Transforming from character to data frame 
-
-#Tokenizing
-Token_Blog <- Blog_Eng %>%
-      mutate(Line = row_number(),source = "Blog_Eng") %>%
-      unnest_tokens(output = word, input = value)
-
-Token_News <- News_Eng %>%
-      mutate(Line = row_number(), source = "News_Eng") %>%
-      unnest_tokens(output = word, input = value)
-
-Token_Tweet <- Tweet_Eng %>%
-      mutate(Line = row_number(), source = "Tweet_Eng") %>%
-      unnest_tokens(output = word, input = value)
-
-rm(Blog_Eng)
-rm(News_Eng)
-rm(Tweet_Eng)
-gc()
-#one big data set
-
-All <- rbind(Token_Blog, Token_News)
-All <- rbind(All, Token_Tweet)
-
-rm(Token_Blog)
-rm(Token_News)
-rm(Token_Tweet)
-gc()
-
-write.table(All, file = "Token_All.csv", sep = ",")
-gc()
-
-
-#removing stop words
-data(stop_words)
-
-Tidy_All <- All %>%
-      anti_join(stop_words)
-rm(All)
-gc()
-
-#tidy_Blog <- Token_Blog %>%
-#      mutate(source = "English Blog") %>%
-#      anti_join(stop_words)
-
-#tidy_News <- Token_News %>%
-#      mutate(source = "English News") %>%
-#      anti_join(stop_words)
-
-#tidy_Tweet <- Token_Tweet %>%
-#      mutate(source = "English News") %>%
-#      anti_join(stop_words)
-
-#joining data sets
-#Tidy_All<- bind_rows(tidy_Blog, tidy_News)
-#Tidy_All <- bind_rows(Tidy_All,tidy_Tweet)
-write.table(Tidy_All, "./Tidy_All_English2.txt", sep = "\t")
-#gc()
-#Tidy_all<-read.table("Tidy_All_English.txt")
-
-####Most common non stop-words all DataSets
-
-
-      
-#characteristic words for the texts inverse word frequency
-      
 ```
-
-## In this presentation I aim to show
-
-- Demonstrate that I have downloaded the data 
-- Basic report of summary statistics using the data sets
-- Report findings
-- Get feedback on my plans for creating a prediction algorithm and Shiny app. 
-
-## 
-
-- Demonstrate that I have downloaded the data and have succesfully downloaded it
-- Basic report of summary statistics using the data sets
-- Report findings
-- Get feedback on my plans for creating a prediction algorithm and Shiny app. 
+## Demonstrate that I have downloaded the data, Basic report of summary statistics using the data sets
+There are three sources of data: Blog, News and Tweet. Each has an entry corresponding different formats, Blog being the longest, Tweet the shortest. In terms of number of words the three texts are similar. As part of the document analysis data has been partially tidied, removing stop words, although these may become handy later. 
+Tidy data should be valuable for establishing tone and thematical clustering techniques we hope will help increase the accuracy of the text prediction app. 
 
 
-```{r cars, echo = TRUE, cache = TRUE}
-Tidy_All %>%
-      count(word, sort = TRUE) %>%
-      filter(n >40000) %>%
-      mutate(word = reorder(word, n )) %>%
-      ggplot(aes(word,n)) +
-      geom_col() + 
-      coord_flip() 
+```{r , echo = FALSE, cache = TRUE}
+T1 <- read.table(file = "Table1.csv")
+T1
 ```
+## Report Findings
+The following table shows the ocurrences of specific values for each 100,000 tidy words. From a glance tweet and blog seem to be more sentiment driven with a higher frequency of words such as love, happy, life. Retweet or "rt", is the third most common "word", which signals a need for further cleaning of the data assuming it would bring incorrect predictions outside of a tweeter prediction app context.  
 
-## Word and document frequency by text
-
-
-Inverse document frequency
-```{r pressure}
-Source_Words <- Tidy_All %>%
-      count(source, word, sort = TRUE) %>%
-      ungroup()
-
-Total_Words <- Source_Words %>%
-      group_by(source) %>%
-      summarize(total = sum(n))
-
-
+```{r pressure, echo =  FALSE, cache = TRUE}
+T2 <- read.csv(file = "Table2.csv")
+T2[,-1]
 ```
+## Common bigrams 
+Further procesing will require n-grams, here we can see the most common bigrams in tidy Blog data. We may need to go back on the tidying since many of the words we want to predict may be stop words. 
+
+
+
+
+
+## Going further, plans on prediction app
+
+The main method of predicting text will be, in principle, a Katz back off model, attempting further refinements with latent Dirichlet allocation for cluster subsetting. A sentiment subseting may also be tried.
 
