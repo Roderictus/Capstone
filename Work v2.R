@@ -112,23 +112,19 @@ T2
 
 Blog_Bigram <- Blog_Eng %>% unnest_tokens(bigram, value, token = "ngrams", n = 2)
 
-
 CB <- Blog_Bigram %>%
   count(bigram, sort = TRUE)
 
-qplot(CB)
+CB %>% top_n(15) %>% 
+  mutate(bigram = reorder(bigram, n)) %>% 
+  ggplot(aes(bigram,n)) +
+  geom_col(show.legend = FALSE) + 
+  labs(y = "Bigram", x = NULL) + 
+  ggtitle("Bigram Ocurrence in Blog Data Set, With Stop Words") +
+  coord_flip()
 
-
-hist()
-
-
-Tidy_All %>%
-  count(word, sort = TRUE) %>%
-  filter(n >40000) %>%
-  mutate(word = reorder(word, n )) %>%
-  ggplot(aes(word,n)) +
-  geom_col() + 
-  coord_flip() 
+CB_tidy <- Blog_Bigram %>%
+    count(bigram, sort = TRUE)
   
 
 #deleting and models subsetting
