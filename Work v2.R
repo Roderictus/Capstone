@@ -115,20 +115,168 @@ Blog_Bigram <- Blog_Eng %>% unnest_tokens(bigram, value, token = "ngrams", n = 2
 CB <- Blog_Bigram %>%
   count(bigram, sort = TRUE)
 
-CB %>% top_n(15) %>% 
+#write.csv(x = CB, file = "Count_Bigrams.csv")
+#CB<- read.csv("Count_Bigrams.csv")
+
+CBgraph <- CB %>% top_n(15)
+
+write.csv(x = CBgraph, file = "CBgraph.csv")
+
+
+CBgraph2 <- read.csv("CBgraph.csv")
+CBgraph2 <- CBgraph2[,-c(1,2)]
+G1 <- CBgraph2 %>% 
   mutate(bigram = reorder(bigram, n)) %>% 
   ggplot(aes(bigram,n)) +
-  geom_col(show.legend = FALSE) + 
+  geom_col(show.legend = FALSE, fill = "orange") + 
   labs(y = "Bigram", x = NULL) + 
   ggtitle("Bigram Ocurrence in Blog Data Set, With Stop Words") +
   coord_flip()
 
-CB_tidy <- Blog_Bigram %>%
-    count(bigram, sort = TRUE)
+ggsave(filename = "Bigram_Blog_graph.jpg", plot = G1, device = "jpeg")
+
+CB_tidy <- tidy_Blog %>% unnest_tokens(bigram, value, token = "ngrams", n = 2)
   
 
 #deleting and models subsetting
 #number of diferent words, numbr of diferent bigrams, trigrams, computational efficiency
+
+head(Blog_Eng)
+head(tidy_Blog)
+
+#############################   Reducing use of memory    ##########################3
+gc()
+
+
+
+
+
+
+###############################
+
+#Cleaning the data
+
+
+#Function used to remove URL
+removeURL <- function(x) gsub('http[[:alnum:]]*', '', x)
+
+#Function used to remove Non-Ascii
+removeNONASCII <- function(x) gsub("[^\x20-\x7E]", '', x)
+
+#Cleaning
+blog_corpus <- Corpus(VectorSource(blog_sample))
+blog_corpus <- tm_map(blog_corpus, content_transformer(tolower))
+blog_corpus <- tm_map(blog_corpus, removePunctuation)
+blog_corpus <- tm_map(blog_corpus, removeNumbers)
+#blog_corpus <- tm_map(blog_corpus, removeWords, stopwords('english'))
+blog_corpus <- tm_map(blog_corpus, content_transformer(removeURL))
+blog_corpus <- tm_map(blog_corpus, content_transformer(removeNONASCII))
+blog_corpus <- tm_map(blog_corpus, stripWhitespace)
+
+
+####################
+
+#Otra versión
+
+
+# function to convert unwanted characters to spaces
+toSpace <- content_transformer(function(x, characters) gsub(characters, " ", x))
+# Remove URL
+data <- tm_map(data, toSpace, "(f|ht)tp(s?)://(.*)[.][a-z]+")
+# Remove twitter handle
+data <- tm_map(data, toSpace, "@[^\\s]+")
+# Remove hashtag
+data <- tm_map(data, toSpace, "#\\S+")
+# Stemming 
+data <- tm_map(data, stemDocument)
+# Remove punctuation
+data <- tm_map(data, removePunctuation)
+# Remove numbers
+data <- tm_map(data, removeNumbers)
+# Remove stopwords
+data <- tm_map(data, removeWords, stopwords(kind="en"))
+# Case conversion
+data <- tm_map(data, content_transformer(tolower))
+# Remove whitespace
+data <- tm_map(data, stripWhitespace)
+
+
+
+##################################
+
+#n grams and matrices
+
+# Create tokenizer functions
+OneGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 1, max = 1))
+TwoGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
+ThreeGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
+# Create term document matrices
+tdmOne <- TermDocumentMatrix(data, control = list(tokenize = OneGramTokenizer))
+tdmTwo <- TermDocumentMatrix(data, control = list(tokenize = TwoGramTokenizer))
+tdmThree <- TermDocumentMatrix(data, control = list(tokenize = ThreeGramTokenizer))
+
+## Create frequency table for each ngram
+# remove sparse terms from the tdm
+tdmOne1 <- removeSparseTerms(tdmOne,0.999)
+tdmTwo1 <- removeSparseTerms(tdmTwo,0.999)
+tdmThree1 <- removeSparseTerms(tdmThree,0.999)
+# find fequencies for each term
+FreqOne <- rowSums(as.matrix(tdmOne1))
+FreqTwo <- rowSums(as.matrix(tdmTwo1))
+FreqThree <- rowSums(as.matrix(tdmThree1))
+# convert to dataframe
+FreqOne <- data.frame(Gram=names(FreqOne),Frequency=FreqOne)
+FreqTwo <- data.frame(Gram=names(FreqTwo),Frequency=FreqTwo)
+FreqThree <- data.frame(Gram=names(FreqThree),Frequency=FreqThree)
+# sort by decreasing freq
+FreqOne <- FreqOne[order(-FreqOne$Frequency),]
+FreqTwo <- FreqTwo[order(-FreqTwo$Frequency),]
+FreqThree <- FreqThree[order(-FreqThree$Frequency),]
+# plots
+g1 <- ggplot(head(FreqOne,25), aes(x=reorder(Gram,-Frequency), y=Frequency)) +
+  geom_bar(stat = "identity") +  coord_flip() +
+  xlab("Unigram") + ylab("Frequency") +
+  labs(title = "25 Most Common Unigrams")
+
+g2 <- ggplot(head(FreqTwo,25), aes(x=reorder(Gram,-Frequency), y=Frequency)) +
+  geom_bar(stat = "identity") +  coord_flip() +
+  xlab("Biigram") + ylab("Frequency") +
+  labs(title = "25 Most Common Bigrams")
+
+g3 <- ggplot(FreqThree, aes(x=reorder(Gram,-Frequency), y=Frequency)) +
+  geom_bar(stat = "identity") +  coord_flip() +
+  xlab("Trigram") + ylab("Frequency") +
+  labs(title = "Most Common Trigrams")
+g1
+
+wordcloud(FreqOne$Gram, FreqOne$Frequency, min.freq=150, max.words = 100)
+wordcloud(FreqTwo$Gram, FreqTwo$Frequency, min.freq=10, max.words = 60)
+
+
+
+###########################################################
+#################   Unique Unigrams     ###################
+#################   Unique Bigrams      ###################
+#################   Unique Trigrams     ###################
+
+
+install.packages("ngram")
+
+library(ngram)
+x <- "Watch out for snakes! 111"
+preprocess(x)
+preprocess(x, remove.punct=TRUE, remove.numbers=TRUE)
+
+preprocess(SBlog)
+
+rcorpus(nwords = 50, alphabet = letters, minwordlen = 1, maxwordlen = 6)
+
+Corpus
+
+
+
+
+
 
 
 
