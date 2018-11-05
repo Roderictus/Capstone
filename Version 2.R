@@ -1,55 +1,63 @@
 library(tm)
 library(tidyverse)
 library(tidyr)
+library(tidytext)
+library(dplyr)
 
-######    Cargar archivos
+####################    Cargar archivos     ######################################
+Blog_Eng<-tbl_df(read_lines(file = "Data/final/en_US/en_US.blogs.txt"))
+News_Eng<-tbl_df(read_lines(file = "Data/final/en_US/en_US.news.txt"))
+Tweet_Eng<-readLines(con =  "Data/final/en_US/en_US.twitter.txt",encoding = "UTF16-LE", skipNul = TRUE)
+Tweet_Eng <- tbl_df(Tweet_Eng)
+
+################        1% de las entradas de blog    ########################
+P_Train <- .03
+
+Blog_Eng  <- Blog_Eng  %>% sample_frac(P_Train, replace = FALSE) %>% mutate(Origin = "Blog" ) 
+News_Eng  <- News_Eng  %>% sample_frac(P_Train, replace = FALSE) %>% mutate(Origin = "News" )
+Tweet_Eng <- Tweet_Eng %>% sample_frac(P_Train, replace = FALSE) %>% mutate(Origin = "Tweet")
+
+############      Un solo documento     ##############################
+#All <- rbind(rbind(Blog_Eng, News_Eng),Tweet_Eng)
+#write.csv(x = All, file = "D:/Proyectos R/Capstone/Capstone2/Docs/All_01.csv") # Guardar el archivo
+############Diferentes documentos para propósito del corpus
+All <- VCorpus(DirSource(directory = "D:/Proyectos R/Capstone/Capstone2/Docs")) #Usando tm
+
+####################      Limpieza de los documentos
+All <- tm_map(x = All,FUN = removePunctuation)
+All <- tm_map(x = All,FUN = content_transformer(tolower))
+All <- tm_map(x = All,FUN = PlainTextDocument)
+All <- tm_map(x = All,FUN = removeNumbers)
+All <- tm_map(x = All,FUN = stripWhitespace)
+#review_corpus = tm_map(review_corpus, removeWords, c("the", "and", stopwords("english")))
+#myCorpus <- tm_map(myCorpus, removeWords,  stopwords("english"))
+#ALLDF <- tidy(All)
+cast_sparse(All)
+
+
+library(tm)
+
+data("AssociatedPress", package = "topicmodels")
+AssociatedPress
+
+
+####################      Document term matrix      ###############################
+DTM_All <-DocumentTermMatrix(All)
+inspect(DTM_All)
+findFreqTerms(DTM_All, 1000)
+###############     Otra matriz con frequencia inversa en lugar de ocurrencias      #################
+IDF_DTM_ALL <- DocumentTermMatrix(All, control = list(weighting = weightTfIdf))
+
+#IDF_DTM_ALLS = removeSparseTerms(IDF_DTM_ALL, 0.95)
+review_dtm_tfidf
 
 
 
-################ 1% de las entradas de blog
 
 
 
 
 
-
-
-SBlog  <- Blog_Eng %>% sample_frac(.01, replace = FALSE) %>% mutate(Origin = "Blog") 
-SNews  <- News_Eng %>% sample_frac(.01, replace = FALSE) %>% mutate(Origin = "Blog")
-STweet <- Tweet_Eng %>% sample_frac(.01, replace = FALSE) %>% mutate(Origin = "Blog")
-
-
-# NOT RUN {
-data("crude")
-## Document access triggers the stemming function
-## (i.e., all other documents are not stemmed yet)
-tm_map(crude, stemDocument, lazy = TRUE)[[1]]
-## Use wrapper to apply character processing function
-tm_map(crude, content_transformer(tolower))
-## Generate a custom transformation function which takes the heading as new content
-headings <- function(x)
-  PlainTextDocument(meta(x, "heading"),
-                    id = meta(x, "id"),
-                    language = meta(x, "language"))
-inspect(tm_map(crude, headings))
-# }
-data_frame<- do.call('rbind', lapply(SBlog, as.data.frame))
-myCorpus <- Corpus(VectorSource(data_frame))
-myCorpus <- tm_map(myCorpus, tolower)
-myCorpus <- tm_map(myCorpus, PlainTextDocument)
-myCorpus<- tm_map(myCorpus,removePunctuation)
-myCorpus <- tm_map(myCorpus, removeNumbers)
-
-head(data_frame)
-head(SBlog)
-
-myCorpus <- Corpus(VectorSource(SBlog))
-myCorpus <- tm_map(myCorpus, tolower)
-myCorpus <- tm_map(myCorpus, PlainTextDocument)
-myCorpus<- tm_map(myCorpus,removePunctuation)
-myCorpus <- tm_map(myCorpus, removeNumbers)
-myCorpus <- tm_map(myCorpus, removeWords,stopwords("english"))
-myCorpus <- tm_map(myCorpus, stripWhitespace)
 
 
 SBlog_bigrams <- SBlog %>%

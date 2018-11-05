@@ -19,6 +19,7 @@ Tweet_Eng <- tbl_df(Tweet_Eng)
 
 #Tokenizing
 Token_Blog <- Blog_Eng %>%
+  
   mutate(Line = row_number(),source = "Blog_Eng") %>%
   unnest_tokens(output = word, input = value)
 Token_News <- News_Eng %>%
