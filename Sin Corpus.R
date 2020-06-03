@@ -1,6 +1,7 @@
 library(tm)
-library(tidyverse)
-library(tidyr)
+#library(tidyverse)
+#library(tidyr)
+#library(quanteda)
 
 ####################    Cargar archivos     ######################################
 Blog_Eng<-tbl_df(read_lines(file = "Data/final/en_US/en_US.blogs.txt"))
@@ -17,6 +18,16 @@ News_Eng  <- News_Eng  %>% sample_frac(P_Train, replace = FALSE) %>% mutate(Orig
 Tweet_Eng <- Tweet_Eng %>% sample_frac(P_Train, replace = FALSE) %>% mutate(Origin = "Tweet")
 
 All <- rbind(rbind(Blog_Eng, News_Eng),Tweet_Eng)
+
+rm(Blog_Eng)
+rm(News_Eng)
+rm(Tweet_Eng)
+
+#################
+head(All)
+
+tokens(x = tolower(All),
+       remove_punct())
 
 ################      El tamaño es el número de términos únicos  
 SBlog_bigrams <- Blog_Eng  %>% 

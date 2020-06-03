@@ -2,7 +2,7 @@ library(tidyverse)
 library(igraph)
 library(tidytext)
 library(tidyr)
-
+library
 #download.file("https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip", "Coursera_Swiftkey.zip")
 #list.files("./final/en_US")
 #unzip("Coursera_Swiftkey.zip")
