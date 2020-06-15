@@ -1,13 +1,15 @@
 library(quanteda)
 library(readtext)
-require(quanteda.corpora)
+#require(quanteda.corpora)
 library(tidyverse)
 library(data.table)
 library(tm)
 library(stringr)
-library(rtweet)
-library(spacyr)
-library(newsmap)
+#library(rtweet)
+#library(spacyr)
+#library(newsmap)
+library(tidyr)
+library(tidytext)
 quanteda_options(threads = 5)
 
 ####################    Cargar archivos     ######################################
@@ -18,17 +20,134 @@ News_Eng<-read_lines(file = "Data/final/en_US/en_US.news.txt")
 Tweet_Eng<-readLines(con =  "Data/final/en_US/en_US.twitter.txt",encoding = "UTF16-LE", skipNul = TRUE)
 #para la versión que no utiliza tbl df
 #Tweet_Eng <- tbl_df(Tweet_Eng)
-master <- c(Blog_Eng, News_Eng, Tweet_Eng)
-
+master <- c(Blog_Eng, News_Eng, Tweet_Eng)  #vector, texto,  que junta todo
 rm(Blog_Eng)
 rm(News_Eng)
 rm(Tweet_Eng)
-
 gc()  #Limpieza
-
 ####################      Quanteda      #####################
 summary(master, n = 2)
-Master_Tokens <- tokens(x = master[1:1000],
+head(master)
+MasterCorpus <- corpus(master)
+#DFM
+
+
+
+
+######################   Versión del libro de nuevo      ######################
+text_df <- tibble(text = master) 
+TempM <- sample_frac(tbl = text_df, size = 0.05)
+text_df <- tibble( text = TempM) # data frame
+rm(TempM)
+text_df <- as_tibble(text_df)
+class(text_df)
+
+head(bi_gram)
+
+#text_df %>% unnest_tokens(bigram, text, token = "ngrams", n = 2)
+
+Master_Tokens <- tokens(x = master[1:100000],
+                        remove_punct      = TRUE,
+                        remove_symbols    = TRUE,
+                        remove_numbers    = TRUE,
+                        remove_url        = TRUE,
+                        remove_separators = TRUE,
+                        split_hyphens     = TRUE)
+
+#Bi_grams <- unnest_ngrams(tbl = text_df,output = "bi_gram", input = "text",n = 2)
+bi_gram   <- tokens_ngrams(x = Master_Tokens, n = 2, concatenator = " ") #forming the bigram
+tri_gram  <- tokens_ngrams(x = Master_Tokens, n = 3) 
+four_gram <- tokens_ngrams(x = Master_Tokens, n = 4)
+
+#Transformar a un sólo data frame
+class(bi_gram)
+as.data.frame(bi_gram)
+corpus(bi_gram)
+as_tibble(bi_gram)
+String_temp <- as.String(bi_gram) #de tokens a string a tibble, a separar en dos columnas y buscar en una 
+tibble(String_temp)
+String_temp[[1]]
+
+#en dos columnas más subset
+
+Ubigram <-unlist(bi_gram)
+
+
+
+
+#limpieza y tokens
+Master_Tokens <- tokens(x = master[1:100000],
+                        remove_punct      = TRUE,
+                        remove_symbols    = TRUE,
+                        remove_numbers    = TRUE,
+                        remove_url        = TRUE,
+                        remove_separators = TRUE,
+                        split_hyphens     = TRUE)
+
+head(Master_Tokens)
+library(tidytext)
+temp <- Master_Tokens %>% unnest_tokens(bigram, text, token = "ngrams", n = 2)
+
+
+
+  
+text_df %>% unnest_tokens(bigram, text, token = "ngrams", n = 2)
+head(text_df)
+Corpus
+
+
+
+
+
+
+
+
+
+
+austen_books()
+class(text_df)
+austen_books() %>%  unnest_tokens(bigram, text, token = "ngrams", n = 2)
+Bi_grams <- unnest_ngrams(tbl = text_df,output = "bi_gram", input = "text",n = 2)
+head(Bi_grams)
+#contar los bigrams
+
+temp <- Bi_grams %>% 
+  count(bi_gram, sort = TRUE) %>%
+  filter(n >2) %>% 
+  separate(bi_gram, c("p1", "p2"), sep = " ") 
+
+
+temp %>% 
+  
+w1 = "of"
+
+temp %>% filter(p1 == w1)
+
+
+
+
+
+
+bigrams_separated <- austen_bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+bigrams_filtered <- bigrams_separated %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)
+
+# new bigram counts:
+bigram_counts <- bigrams_filtered %>% 
+  count(word1, word2, sort = TRUE)
+
+bigram_counts
+
+
+
+
+
+
+
+Master_Tokens <- tokens(x = master[1:100000],
        remove_punct      = TRUE,
        remove_symbols    = TRUE,
        remove_numbers    = TRUE,
@@ -37,39 +156,43 @@ Master_Tokens <- tokens(x = master[1:1000],
        split_hyphens     = TRUE)
 #class(Master_Tokens)
 
-Corpus <- dfm(Master_Tokens)  #Crear un Corpus
-              #tolower = TRUE, # faltaba ponerlo en minúsculas
-              #stem = TRUE,    # se podría poner TRUE para reducir el número de palabras distintas
-              
-Master_Tokens <- tokens_select(Master_Tokens, pattern = stopwords('en'), selection = 'remove') #removing stop words
-
-Corpus <- dfm(Master_Tokens,  #Crear un Corpus
+#Master_Tokens <- tokens_select(Master_Tokens, pattern = stopwords('en'), selection = 'remove') #removing stop words
+Corpus <- dfm(Master_Tokens[1:10000],  #Crear un Corpus
               tolower = TRUE, # faltaba ponerlo en minúsculas
               stem = TRUE,    # se podría poner TRUE para reducir el número de palabras distintas
               remove_punct =TRUE   )
 
-#ncol(Corpus) 
+ncol(Corpus) #número de palabras distintas
+rm(PATH)
 #relative one gram density
 
 WordD   <- colSums(Corpus)
 WordD[order(colSums(-Corpus))]
 head(WordD[order(colSums(-Corpus))])
+tail(WordD[order(colSums(-Corpus))])
 NWords  <- sum(colSums(Corpus)) #5,588,342 palabras
 TasaP <- (WordD/NWords)*100000
 head(TasaP)
 head(TasaP[order(-TasaP)]) #Ordered rate 
-#First Word
+
+#######################################################
+#################   First Word    #####################
+#######################################################
+
+
 # Relative frequency of one gram
-sort(x = ((WordD/NWords)*100000),  decreasing = TRUE) #same
-tail(Master_Tokens)
-Master_Tokens[[1]][1]
-length(Master_Tokens)
+class(TasaP)
+max(TasaP)
+TasaP[]
+
+
 ###########################
 FirstW <- vector()
 for (i in 1:length(Master_Tokens)) {
   wordtemp <- Master_Tokens[[i]][1]
   FirstW   <- c(FirstW, wordtemp)
-  }
+}
+
 rm(wordtemp)
 
 FWColSum <- FirstW %>% dfm() %>% colSums() 
@@ -83,54 +206,92 @@ bi_gram   <- tokens_ngrams(x = Master_Tokens, n = 2) #forming the bigram
 tri_gram  <- tokens_ngrams(x = Master_Tokens, n = 3) 
 four_gram <- tokens_ngrams(x = Master_Tokens, n = 4)
 
-bi_gram
+#dropping the n grams below a certain threshold
 
 fcm(bi_gram)
-
-
 x <- fcm(x = Corpus, size = 5, ordered = TRUE) #size es el numero de features antes y despu[es de la pregunta
 
 #devolver una columna y una línea específicas
-
-
-
-
 #droping features under a certain n 
 
+##########################GREP de n-1 
+
+"The guy in front of me just bought a pound of bacon, a bouquet, and a case of"
+
+
+class(bi_gram)
+####Colapse bigram to term frequency
+
+library(dplyr)
+library(janeaustenr)
+library(tidytext)
+
+##########      Otra versión de los n gramas      ################# 
+head(Corpus)
+
+head(Master_Tokens)
 
 
 
-tri_gram
-four_gram
+Master_Tokens %>% unnest_tokens(bigram, docs, tokens = "ngrams", n=2 )
+
+
+
+austen_bigrams <- austen_books() %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2)
+
+austen_bigrams
+
+bigrams_separated <- austen_bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+bigrams_filtered <- bigrams_separated %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)
+
+# new bigram counts:
+bigram_counts <- bigrams_filtered %>% 
+  count(word1, word2, sort = TRUE)
+
+bigram_counts
+book_bigram <- bi_gram %>%
+  count(sort = TRUE)
+
+total_words <- book_words %>% 
+  group_by(book) %>% 
+  summarize(total = sum(n))
+
+
+
+book_words <- left_join(book_words, total_words)
+
+
+
+
+
+
+
+
+gregexpr(pattern = "case_of", text = bi_gram[1:1000])
+
+
+
+
+
 
 unigram_probs <- hacker_news_text %>%
   unnest_tokens(word, text) %>%
   count(word, sort = TRUE) %>%
   mutate(p = n / sum(n))
-
 #Feature co-ocurrence matrix (fcm)
 FCMCorp <- fcm(Corpus)
-
 FCMCorp
-
 grep(pattern = "in", x = FCMCorp)
-
 #eliminar palabras con bajas frequencias
-
-
-
-
-#se podría buscar la segunda palabra dentro de esta matriz
-
-
-
 x <- fcm(data_corpus_inaugural, context = "window", size = 5)
-
 #search for a  word, return the second word 
-
 #vector para remover palabras con una ocurrencia de uno
 ##############################################################
-
 #First word can be most common first word 
 #Eliminate words with low ocurrence  
 #SearchWord can be used to return the most common n-1 gram that has the word words 
@@ -165,6 +326,9 @@ setkey(bi_words, word_1, word_2)
 setkey(tri_words, word_1, word_2, word_3)
 
 discount_value <- 0.75
+
+
+
 
 ######## Finding Bi-Gram Probability #################
 
