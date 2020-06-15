@@ -28,9 +28,9 @@ knitr::opts_chunk$set(echo = FALSE)
 #Transforming from character to data frame 
 
 #Tokenizing
-#Token_Blog <- Blog_Eng %>%
-#      mutate(Line = row_number()) %>%
-#      unnest_tokens(output = word, input = value)
+Token_Blog <- Blog_Eng %>%
+      mutate(Line = row_number()) %>%
+      unnest_tokens(output = word, input = value)
 
 #Token_News <- News_Eng %>%
 #      mutate(Line = row_number()) %>%
@@ -88,13 +88,6 @@ gc()
 ## In this presentation I aim to show
 
 - Demonstrate that I have downloaded the data 
-- Basic report of summary statistics using the data sets
-- Report findings
-- Get feedback on my plans for creating a prediction algorithm and Shiny app. 
-
-## 
-
-- Demonstrate that I have downloaded the data and have succesfully downloaded it
 - Basic report of summary statistics using the data sets
 - Report findings
 - Get feedback on my plans for creating a prediction algorithm and Shiny app. 
