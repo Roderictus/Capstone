@@ -1,18 +1,20 @@
 ---
 title: "Milestone Report"
 author: "Rodrigo Franco Fuentes"
-date: "13 de mayo de 2017"
-output: slidy_presentation
+date: "27/10/2018"
+output:
+  ioslides_presentation: default
+  slidy_presentation: default
 ---
-
 ```{r setup, include=FALSE, cache = TRUE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE)
 #Packages
 #library(dplyr)
 #library(tidyr)
 #library(tidytext)
-#library(tidyverse)
+library(tidyverse)
 #library(ggplot2)
+<<<<<<< HEAD
 #library(igraph)
 #library(ggraph)
 #library(tidytext)
@@ -83,23 +85,53 @@ Tidy_all %>%
 gc()
 #characteristic words for the texts inverse word frequency
       
+=======
+library(igraph)
+library(tidytext)
+>>>>>>> 514d8cb4eec9c8fec68ea7b6aa62d635fd888885
+```
+## I.  Basic report of summary statistics using the data sets
+There are three sources of data: Blog, News and Tweet. Each has an entry corresponding different formats, Blog being the longest, Tweet the shortest. In terms of number of words the three texts are similar. As part of the document analysis data has been partially tidied, removing stop words, although these may become handy later. Removing stop words reduces the data set total size to less than Half, blog has the highest account of stop words, News has substantially less.
+
+```{r , echo = FALSE, cache = TRUE}
+T1 <- read.table(file = "Table1.csv")
+T1
 ```
 
-## In this presentation I aim to show
+## II. Report Findings
+The following table shows the occurrences of specific values for each 100,000 tidy words. From a glance tweet and blog seem to be more sentiment driven with a higher frequency of words such as love, happy, life. Retweet or "rt", is the third most common "word", which signals a need for further cleaning of the data assuming it would bring incorrect predictions outside of a tweeter prediction app context.  
 
-- Demonstrate that I have downloaded the data 
-- Basic report of summary statistics using the data sets
-- Report findings
-- Get feedback on my plans for creating a prediction algorithm and Shiny app. 
-
-
-```{r cars, echo = TRUE}
-
+<<<<<<< HEAD
+=======
+##Top Words by Source and Frequency (for each 100,000)
+```{r Report Findings, echo =  FALSE, cache = TRUE,}
+T2 <- read.csv(file = "Table2.csv")
+options(digits = 2)
+T2[,-c(1, 4:6)]
 ```
 
-## Word and document frequency
+## III. Common bigrams 
+Further processing will require n-grams, here we can see the most common bigrams in tidy Blog data. We may need to go back on the tidying since many of the words we want to predict may be stop words. But also we may find that the most common bigrams are pairs of stop words as our bigram frequency table indicates. Here we may find that bigrams repeat stop words in a continuous nonsensical way (ej. "I have of the i was...") This may be solved with higher order n-grams or by restricting stop words recurrence. 
 
-```{r pressure}
-plot(pressure)
+## Most Common Bigrams
+```{r Report , echo =  FALSE, cache = TRUE}
+CBgraph2 <- read.csv("CBgraph.csv")
+CBgraph2 <- CBgraph2[,-c(1,2)]
+G1 <- CBgraph2 %>% 
+  mutate(bigram = reorder(bigram, n)) %>% 
+  ggplot(aes(bigram,n)) +
+  geom_col(show.legend = FALSE, fill = "orange") + 
+  labs(y = "Bigram", x = NULL) + 
+  ggtitle("Bigram Ocurrence in Blog Data Set, With Stop Words") +
+  coord_flip()
+G1
 ```
+
+## IV. Going further, plans on prediction app
+>>>>>>> 514d8cb4eec9c8fec68ea7b6aa62d635fd888885
+
+The main method of predicting text will be, in principle, a Katz back off model, attempting further refinements with latent Dirichlet allocation for cluster and sentiment subseting may also be tried. Next step is investigating about efficient implementations of this algorithm, dynamic subsetting, and further tidying of the data. 
+
+
+
 
