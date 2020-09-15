@@ -1,21 +1,25 @@
 library(quanteda)
 library(readtext)
-#require(quanteda.corpora)
 library(tidyverse)
 library(data.table)
 library(tm)
 library(stringr)
-#library(rtweet)
-#library(spacyr)
-#library(newsmap)
 library(tidyr)
 library(tidytext)
 quanteda_options(threads = 5)
 
+#require(quanteda.corpora)
+#library(rtweet)
+#library(spacyr)
+#library(newsmap)
+###versión sólo con twitter
+library(tm)
+#library(RWeka)
+
 ####################    Cargar archivos     ######################################
 #Blog_Eng<-tbl_df(read_lines(file = "Data/final/en_US/en_US.blogs.txt"))
 #News_Eng<-tbl_df(read_lines(file = "Data/final/en_US/en_US.news.txt"))
-Blog_Eng<-read_lines(file = "Data/final/en_US/en_US.blogs.txt")
+Blog_Eng<-read_lines(file = "Data/final/en_US/en_US.blogs.txt") #200 MB
 News_Eng<-read_lines(file = "Data/final/en_US/en_US.news.txt")
 Tweet_Eng<-readLines(con =  "Data/final/en_US/en_US.twitter.txt",encoding = "UTF16-LE", skipNul = TRUE)
 #para la versión que no utiliza tbl df
@@ -25,39 +29,150 @@ rm(Blog_Eng)
 rm(News_Eng)
 rm(Tweet_Eng)
 gc()  #Limpieza
-####################      Quanteda      #####################
-summary(master, n = 2)
+#temp <- VectorSource(readLines(con =  "Data/final/en_US/en_US.twitter.txt",encoding = "UTF16-LE", skipNul = TRUE))
+#CorpusTemp <- Corpus(temp)
+
+################################################################################
+master <-tolower(master)
+tkns <- tokens(x = unlist(master), 
+       remove_punct = TRUE,
+       remove_symbols = TRUE, 
+       remove_numbers = TRUE,
+       remove_url = TRUE,
+       remove_separators = TRUE) #tokens con un poco de limpieza
+Subset <- sample(x = 1:length(tkns), size = (length(tkns)/10))
+TKNS <- tkns[Subset] #utilizar una muestra
+##################        N-GRAMAS        ###################
+##########################     Dos Palabras
+
+bi_gram   <- tokens_ngrams(x = TKNS, n = 2, concatenator = " ") #forming the bigram
+head(TKNS)
+
+temp <- table(unlist(bi_gram)) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq)) 
+temp <- filter(temp , Freq > 2 ) #sólo ocurrencias de 3 o más
+
+mp2 <- unlist(str_split(string = temp$Var1, pattern = " ")) 
+
+P2 <- c(1:nrow(temp))*2 #segunda palabra, pares 
+P1 <- P2-1  #primer palabra, impares
+
+colnames(temp) <- c("frase", "freq")
+temp$p1 <- mp2[P1]
+temp$p2 <- mp2[P2]
+bi_gram <- temp
+
+rm(temp)
+rm(P1)
+rm(P2)
+rm(mp2)
+rm(Subset)
+
+bi_gram
+
+#######################    Tres Palabras    ######################
+tri_gram  <- tokens_ngrams(x = TKNS, n = 3, concatenator = " ") 
+
+temp <- table(unlist(tri_gram)) %>% 
+  as.data.frame() %>% 
+  arrange(desc(Freq))
+
+mp3 <- temp$Var1 %>% 
+  str_split(pattern = " ") %>% 
+  unlist()#2,306,744
+
+colnames(temp) <- c("frase", "freq")
+
+P3 <- c(1:nrow(temp))*3  #3,6,9
+P2 <- P3-1 #2,5,8
+P1 <- P3-2 #1,4,7
+
+temp$p1 <- mp3[P1]
+temp$p2 <- mp3[P2]
+temp$p3 <- mp3[P3]
+
+#subsetear a una frecuencia mínima
+temp <- filter(temp, freq > 1) #64403
+tri_gram <- temp
+rm(temp)
+####################     FOUR   #################
+four_gram  <- tokens_ngrams(x = TKNS, n = 4, concatenator = " ") 
+
+temp <- table(unlist(four_gram)) %>% 
+  as.data.frame() %>% 
+  arrange(desc(Freq))
+
+temp <- temp %>% filter(Freq > 1)
+
+mp3 <- temp$Var1 %>% 
+  str_split(pattern = " ") %>% 
+  unlist()
+colnames(temp) <- c("frase", "freq")
+
+P4 <- c(1:nrow(temp))*4 # 
+P3 <- P4-1 
+P2 <- P4-2 
+P1 <- P4-3 
+
+temp$p1 <- mp3[P1]
+temp$p2 <- mp3[P2]
+temp$p3 <- mp3[P3]
+temp$p4 <- mp3[P4]
+
+four_gram <-temp
+
+#head(tri_gram)
+tri_gram %>% filter(p1 =="case", p2 =="of")
+four_gram %>% filter(p1 =="a", p2 =="case", p3 == "of")
+
+#alternativamente buscar una oración 
+gc()
+
+The guy in front of me just bought a pound of bacon, a bouquet, and a case of
+
+#tri_gram %>% filter(frase == "a case of")
+#four_gram %>% filter(frase == "and a case of")
+
+#######################################################################
+##################  
+temp <- grep(pattern = "and a case of", x = master) #tal vez en un subset, computacionalmente intensivo 
+
+master[temp]
+
 head(master)
-MasterCorpus <- corpus(master)
-#DFM
+
+#####################
+
+library(ngram)
+Tweet_Eng <- unlist(Tweet_Eng)
+#Función para limpieza de caractéres
+subset <- nchar(Tweet_Eng) > 40
+Tweet_Eng <- gsub("\\d", "", Tweet_Eng[subset])
+Tweet_Eng <- gsub("[[:punct:]]", "", Tweet_Eng)
+#Tweet_Eng <- gsub("rt", "", Tweet_Eng)
+#temp <-ngram(gsub(c("[^\x20-\x7E][\\D][[:punct:]][#]"), "", Tweet_Eng[subset][1:100]), 
+#             n = 2)
+#limpieza con gsub 
+temp <-ngram(gsub("\\d", "", Tweet_Eng[subset][1:100]), 
+             n = 2)
+temp <- matrix(vctr) #el largo del maximo vector y n la entrada n 
+BigramTokenizer <-   function(x) unlist(lapply(ngrams(words(x),2), paste, collapse = " "), use.names = FALSE)
+temp[1]
+
+ngram(temp[1],2)
 
 
 
+for (j in 2:2) {
+  for ( i in 1:length(tkns[[j]])) {
+    tkns[[j]][i]
+    vctr <-c(vctr, tkns[[j]][i])  
+  }
+  print(vctr)
+  } 
 
-######################   Versión del libro de nuevo      ######################
-text_df <- tibble(text = master) 
-TempM <- sample_frac(tbl = text_df, size = 0.05)
-text_df <- tibble( text = TempM) # data frame
-rm(TempM)
-text_df <- as_tibble(text_df)
-class(text_df)
 
-head(bi_gram)
-
-#text_df %>% unnest_tokens(bigram, text, token = "ngrams", n = 2)
-
-Master_Tokens <- tokens(x = master[1:100000],
-                        remove_punct      = TRUE,
-                        remove_symbols    = TRUE,
-                        remove_numbers    = TRUE,
-                        remove_url        = TRUE,
-                        remove_separators = TRUE,
-                        split_hyphens     = TRUE)
-
-#Bi_grams <- unnest_ngrams(tbl = text_df,output = "bi_gram", input = "text",n = 2)
-bi_gram   <- tokens_ngrams(x = Master_Tokens, n = 2, concatenator = " ") #forming the bigram
-tri_gram  <- tokens_ngrams(x = Master_Tokens, n = 3) 
-four_gram <- tokens_ngrams(x = Master_Tokens, n = 4)
 
 #Transformar a un sólo data frame
 class(bi_gram)
