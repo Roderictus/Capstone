@@ -14,8 +14,81 @@ knitr::opts_chunk$set(echo = FALSE, cache = TRUE)
 #library(tidytext)
 library(tidyverse)
 #library(ggplot2)
+<<<<<<< HEAD
+#library(igraph)
+#library(ggraph)
+#library(tidytext)
+
+
+##Reading files
+#Blog_Eng<-tbl_df(read_lines(file = "./final/en_US/en_US.blogs.txt"))
+#News_Eng<-tbl_df(read_lines(file = "./final/en_US/en_US.news.txt"))
+#Tweet_Eng<-tbl_df(read_lines(file = "./final/en_US/en_US.twitter.txt"))
+
+###Tokenizing into sentences and words
+#Temporally Subsetting to reduce time
+#Transforming from character to data frame 
+
+#Tokenizing
+Token_Blog <- Blog_Eng %>%
+      mutate(Line = row_number()) %>%
+      unnest_tokens(output = word, input = value)
+
+#Token_News <- News_Eng %>%
+#      mutate(Line = row_number()) %>%
+#      unnest_tokens(output = word, input = value)
+
+#Token_Tweet <- Tweet_Eng %>%
+#      mutate(Line = row_number()) %>%
+#      unnest_tokens(output = word, input = value)
+
+#removing stop words
+#data(stop_words)
+#tidy_Blog <- Token_Blog %>%
+#      mutate(source = "English Blog") %>%
+#      anti_join(stop_words)
+
+#tidy_News <- Token_News %>%
+#      mutate(source = "English News") %>%
+#      anti_join(stop_words)
+
+#tidy_Tweet <- Token_Tweet %>%
+#      mutate(source = "English News") %>%
+#      anti_join(stop_words)
+
+#joining data sets
+#Tidy_All<- bind_rows(tidy_Blog, tidy_News)
+#Tidy_All <- bind_rows(Tidy_All,tidy_Tweet)
+#write.table(Tidy_All, "./Tidy_All_English.txt", sep = "\t")
+#gc()
+Tidy_all<-read.table("Tidy_All_English.txt")
+
+data(stop_words)
+stop_words
+
+#Word distribution
+
+
+####Most common non stop-words all DataSets
+Tidy_all %>%
+      count(word, sort = TRUE) %>%
+      filter(n >40000) %>%
+      mutate(word = reorder(word, n )) %>%
+      ggplot(aes(word,n)) +
+      geom_col() + 
+      coord_flip()
+
+Tidy_all %>%
+      group_by(source) %>%
+      count( word, sort = TRUE)
+
+gc()
+#characteristic words for the texts inverse word frequency
+      
+=======
 library(igraph)
 library(tidytext)
+>>>>>>> 514d8cb4eec9c8fec68ea7b6aa62d635fd888885
 ```
 ## I.  Basic report of summary statistics using the data sets
 There are three sources of data: Blog, News and Tweet. Each has an entry corresponding different formats, Blog being the longest, Tweet the shortest. In terms of number of words the three texts are similar. As part of the document analysis data has been partially tidied, removing stop words, although these may become handy later. Removing stop words reduces the data set total size to less than Half, blog has the highest account of stop words, News has substantially less.
@@ -28,6 +101,8 @@ T1
 ## II. Report Findings
 The following table shows the occurrences of specific values for each 100,000 tidy words. From a glance tweet and blog seem to be more sentiment driven with a higher frequency of words such as love, happy, life. Retweet or "rt", is the third most common "word", which signals a need for further cleaning of the data assuming it would bring incorrect predictions outside of a tweeter prediction app context.  
 
+<<<<<<< HEAD
+=======
 ##Top Words by Source and Frequency (for each 100,000)
 ```{r Report Findings, echo =  FALSE, cache = TRUE,}
 T2 <- read.csv(file = "Table2.csv")
@@ -53,6 +128,7 @@ G1
 ```
 
 ## IV. Going further, plans on prediction app
+>>>>>>> 514d8cb4eec9c8fec68ea7b6aa62d635fd888885
 
 The main method of predicting text will be, in principle, a Katz back off model, attempting further refinements with latent Dirichlet allocation for cluster and sentiment subseting may also be tried. Next step is investigating about efficient implementations of this algorithm, dynamic subsetting, and further tidying of the data. 
 
