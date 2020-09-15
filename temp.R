@@ -1,3 +1,8 @@
+#good turing
+#Stupid Backoff
+#
+
+
 #Quanteda Tutorial
 #Resources
 ################      PAPER
